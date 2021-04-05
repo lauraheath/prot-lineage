@@ -1,5 +1,4 @@
-install.packages("kableExtra")
-install.packages("DescTools")
+synapser::synLogin()
 
 TMT_Express_Load <- function( SynID, names ){
   #'@SynID a synapse ID of a proteomics csv matrix eg. syn21266454 or syn21266454
@@ -61,8 +60,8 @@ Meta <- Meta[ colnames(Log2_Normalized), ]
 Meta <- Meta[ ,colnames(Meta)[ (colnames(Meta) %in%'controlType' )==F] ]
 
 # Harmonize case-control status
-Meta$diagnosis <- "other"
-Meta$diagnosis[Meta$cogdx == 1 & Meta$braaksc <= 3 & Meta$ceradsc >= 3] <- "control"
+Meta$diagnosis <- "Other"
+Meta$diagnosis[Meta$cogdx == 1 & Meta$braaksc <= 3 & Meta$ceradsc >= 3] <- "Control"
 Meta$diagnosis[Meta$cogdx == 4 & Meta$braaksc >= 4 & Meta$ceradsc <= 2] <- "AD"
 
 kableExtra::kable(table(Meta$diagnosis))
@@ -84,32 +83,67 @@ Meta$APOE <- as.numeric( APOS[ as.character(Meta$apoe_genotype) ] )
 
 
 ## Winzorize Expression Data
-sink_preWinzor<- Log2_Normalized
-for( i in 1:dim(Log2_Normalized)[1] ){
-  Log2_Normalized[i,] <- DescTools::Winsorize( as.numeric(Log2_Normalized[i,]), na.rm = TRUE ) 
-}
+# sink_preWinzor<- Log2_Normalized
+# for( i in 1:dim(Log2_Normalized)[1] ){
+#   Log2_Normalized[i,] <- DescTools::Winsorize( as.numeric(Log2_Normalized[i,]), na.rm = TRUE ) 
+# }
 row.names(Meta) <- Meta$batchChannel
 
-#Code Sex and Diagnosis as Factors
-Meta$msex <- as.factor(Meta$msex)
-Meta$APOE <- as.factor(Meta$APOE)
 
-####Meta for Diagnosis
-Meta_D <- Meta[ Meta$diagnosis %in% c('AD','control'), ]
-Meta_D$diagnosis <- as.factor(Meta_D$diagnosis)
+max(Log2_Normalized, na.rm=TRUE)
+max(sink_preWinzor, na.rm=TRUE)
+min(Log2_Normalized, na.rm=TRUE)
+min(sink_preWinzor, na.rm=TRUE)
 
-# change the '|' to a period in the row names of the protein matrices
-Log2_Normalized2 <- Log2_Normalized
-Log2_Normalized2$proteins <- rownames(Log2_Normalized2)
-Log2_Normalized2$proteins <- gsub("\\|.*", "", Log2_Normalized2$proteins)
-rownames(Log2_Normalized2) <- Log2_Normalized$proteins2
-Log2_Normalized2$proteins<-NULL
+m1 <- data.matrix(Log2_Normalized)
+hist(m1)
 
 
-#check out some protein distributions
-log2prots <- t(Log2_Normalized)
-log2prots <- as.data.frame(log2prots)
-hist(log2prots$VAMP1_P23763)
-hist(log2prots$WDR33_Q9C0J8)
-sum(is.na(log2prots$KCTD13_Q8WZ19))
-sum(is.na(log2prots$CBX3_Q13185))
+
+
+
+
+
+
+
+# # change the '|' to a period in the row names of the protein matrices
+# Log2_Normalized2 <- Log2_Normalized
+# Log2_Normalized2$proteins <- rownames(Log2_Normalized2)
+# Log2_Normalized2$proteins <- gsub("\\|.*", "", Log2_Normalized2$proteins)
+# #need to make duplicated gene short names unique
+# Log2_Normalized2$proteins <- make.names(Log2_Normalized2$proteins, unique=TRUE)
+# rownames(Log2_Normalized2) <- Log2_Normalized2$proteins
+# Log2_Normalized2$proteins<-NULL
+# 
+# 
+# #check out some protein distributions
+# log2prots <- t(Log2_Normalized)
+# log2prots <- as.data.frame(log2prots)
+# hist(log2prots$VAMP1_P23763)
+# hist(log2prots$WDR33_Q9C0J8)
+# sum(is.na(log2prots$KCTD13_Q8WZ19))
+# sum(is.na(log2prots$CBX3_Q13185))
+# max(log2prots$WDR33)
+# 
+# log2prots <- t(sink_preWinzor)
+# log2prots <- as.data.frame(log2prots)
+# hist(log2prots$VAMP1)
+# hist(log2prots$WDR33)
+# sum(is.na(log2prots$KCTD13))
+# sum(is.na(log2prots$CBX3))
+# max(log2prots$`WDR33|Q9C0J8`)
+# summary(log2prots$`WDR33|Q9C0J8`)
+# 
+# 
+# 
+# rando <- sample_n(Log2_Normalized2, 20)
+# rando2 <- data.matrix(rando)
+# hist(Normalized)
+# hist.data.frame(rando)
+# 
+# datmatrix <- data.matrix(Log2_Normalized)
+# hist(datmatrix)
+# install.packages("Hmisc")
+# library(Hmisc)
+# hist.data.frame(rando)
+# h <- ggplot(data = log2prots, aes(x = ))

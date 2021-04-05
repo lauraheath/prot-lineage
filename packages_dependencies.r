@@ -22,6 +22,7 @@ install.packages(packageurl, repos=NULL, type="source")
 BiocManager::install(c("Biobase", "BiocGenerics","DelayedArray","DelayedMatrixStats","limma","S4Vectors","SingleCellExperiment","SummarizedExperiment", "batchelor", "Matrix.utils"))
 devtools::install_github('cole-trapnell-lab/leidenbase')
 devtools::install_github('cole-trapnell-lab/monocle3', ref="develop")
+BiocManager::install("monocle")
 
 install.packages("kableExtra")
 install.packages("DescTools")
@@ -35,3 +36,4 @@ library(limma)
 library(Matrix)
 library(kableExtra)
 library(DescTools)
+
