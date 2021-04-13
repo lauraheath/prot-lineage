@@ -12,25 +12,6 @@ gene_short_name <- as.data.frame(rownames(dat))
 names(gene_short_name)[names(gene_short_name) == "rownames(dat)"] <- "gene_short_name"
 rownames(gene_short_name) <- rownames(dat)
 
-genesums <- data.frame(rowSums(dat), na.rm=T)
-cellsums <- data.frame(colSums(dat), na.rm=T)
-hist(genesums$rowSums.dat.)
-hist(cellsums$colSums.dat.)
-
-#impute missing pmi (2 missing: fill in with median pmi)
-paste('Imputing PMI to:',median(Meta$pmi[!is.na(Meta$pmi)]))
-#add this back into the metadata file
-Meta$pmi[is.na(Meta$pmi)] <- 6.5
-
-
-delog <- 2^(Log2_Normalized)
-delog[is.na(delog)] <- 0
-genesums <- data.frame(rowSums(delog), na.rm=T)
-cellsums <- data.frame(colSums(delog), na.rm=T)
-hist(genesums$rowSums.delog.)
-hist(cellsums$colSums.delog.)
-
-hist(delog$b01.129N)
 
 #get list of genes that are differentially expressed between AD case & control (Jake's analysis)
 #read in meta-analysis results (across 4 brain regions)
@@ -39,44 +20,8 @@ ADgenes_meta <- read.csv(p$path, sep="\t")
 ADgenes_meta <- subset(ADgenes_meta, ADgenes_meta$fdr.random<0.05)
 dim(ADgenes_meta)
 
-
-
-
-
-ColNorm <- function(dat){
-
-  M = max(colSums(dat))
-  l <- length(colnames(dat))
-
-  for( i in 1:l){
-
-    dat[,i] = dat[,i]*(M/sum(dat[,i]))
-
-  }
-
-  return(dat)
-}
-
-datNorm <- ColNorm(dat)
-cellsums2 <- data.frame(colSums(datNorm, na.rm=T))
-
-dlpfcCPMObj <- synapser::synGet('syn8456638')
-Dat <- read.delim(dlpfcCPMObj$path,stringsAsFactors = F)
-#to save the components of the monocle object for later use:
-saveRDS(counts, file="LH_TCX_processed_countmatrix.rds")
-saveRDS(gene_metadata, file="LH_TCX_processed_gene_metadata.rds")
-saveRDS(temp2, file="LH_TCX_processed_cell_metadata.rds")
-saveRDS(cds_tcx, file="LH_CDS_TCX_Monocle3Object.rds")
-
 #for monocle: expression matrix=counts, cell_metadata=temp2, gene_metadata=gene_metadata
-
-# must first unload synapser because causes multiple definitions of S4Vectors
-detach("package:synapser", unload=TRUE)
-unloadNamespace("PythonEmbedInR") 
-#run monocle and get Monocle Object: cds_tcx
-
-
-cds <- new_cell_data_set(datNorm, cell_metadata=Meta, gene_metadata=gene_short_name)
+cds <- new_cell_data_set(dat, cell_metadata=Meta, gene_metadata=gene_short_name)
 
 #limit to differentially expressed genes (via Jake's meta analysis across 4 regions)
 genes2<-c()
@@ -119,7 +64,7 @@ plot_cells(cds, color_cells_by="msex", cell_size = 2, label_cell_groups=0,show_t
   legend.key.width = unit(0.5,"cm"))
 
 
-### create an indicator to root the tree nearest Control individuals with cogdx == 1
+
 
 
 #separate by sex
@@ -138,22 +83,6 @@ cdsF <- cluster_cells(cdsF, cluster_method = "louvain")
 
 cdsF <- learn_graph(cdsF)
 
-
-
-#label clusters, root in the cluster with the most control patients & least AD patients
-cdsF$cluster <- clusters(cdsF)
-table(cdsF$cluster, cdsF$diagnosis)
-prop.table(table(cdsF$cluster, cdsF$diagnosis))
-
-#cluster 2 has highest proportion of control & low proportion of AD
-plot_cells(cdsF, color_cells_by="diagnosis", cell_size = 2, label_cell_groups=0,show_trajectory_graph=TRUE)+theme(
-  legend.title = element_text(size = 10),
-  legend.text = element_text(size = 7),legend.key.size = unit(.5, "cm"),
-  legend.key.width = unit(0.5,"cm"))
-plot_cells(cdsF, color_cells_by="cluster", cell_size = 2, label_cell_groups=0,show_trajectory_graph=TRUE)+theme(
-  legend.title = element_text(size = 10),
-  legend.text = element_text(size = 7),legend.key.size = unit(.5, "cm"),
-  legend.key.width = unit(0.5,"cm"))
 
 #create an indicator for earliest/least pathology people (diagnosis==Control, ceradsc==4)
 cdsF$early <- ifelse(cdsF$diagnosis=="Control" & cdsF$ceradsc==4, "early", "not_early")

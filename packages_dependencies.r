@@ -23,6 +23,7 @@ BiocManager::install(c("Biobase", "BiocGenerics","DelayedArray","DelayedMatrixSt
 devtools::install_github('cole-trapnell-lab/leidenbase')
 devtools::install_github('cole-trapnell-lab/monocle3', ref="develop")
 BiocManager::install("monocle")
+BiocManager::install("biomaRt")
 
 install.packages("kableExtra")
 install.packages("DescTools")
@@ -32,8 +33,10 @@ library(ggplot2)
 library(grid)
 library(gridExtra)
 library(monocle3)
+library(monocle)
 library(limma)
 library(Matrix)
 library(kableExtra)
 library(DescTools)
+library(biomaRt)
 

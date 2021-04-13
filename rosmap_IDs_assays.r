@@ -29,7 +29,7 @@ Meta2 <- merge(rosmap_rnaseq, Meta, all=TRUE)
 Meta2$rnaseq[is.na(Meta2$rnaseq)] <- 0
 Meta2$proteomics[is.na(Meta2$proteomics)] <- 0
 table(Meta2$rnaseq, Meta2$proteomics)
-
+Meta2 <- subset(Meta2, Meta2$proteomics==1)
 
 
 

@@ -31,7 +31,7 @@ TMT_Express_Load <- function( SynID, names ){
 }
 
 Log2_Normalized <-TMT_Express_Load('syn21266454', 1)
-Normalized <- TMT_Express_Load('syn21266453', 1)
+#Normalized <- TMT_Express_Load('syn21266453', 1)
 Meta <- TMT_Express_Load('syn21323404', 1)
 
 # - Public Facing BioSpecimin Data: syn21323366
@@ -81,27 +81,67 @@ APOS[grepl("4",names(APOS))] <- 1
 APOS[grepl("44",names(APOS))] <- 2
 Meta$APOE <- as.numeric( APOS[ as.character(Meta$apoe_genotype) ] )
 
+#impute missing pmi (2 missing: fill in with median pmi)
+paste('Imputing PMI to:',median(Meta$pmi[!is.na(Meta$pmi)]))
+#add this back into the metadata file
+Meta$pmi[is.na(Meta$pmi)] <- 6.5
 
-## Winzorize Expression Data
-# sink_preWinzor<- Log2_Normalized
-# for( i in 1:dim(Log2_Normalized)[1] ){
-#   Log2_Normalized[i,] <- DescTools::Winsorize( as.numeric(Log2_Normalized[i,]), na.rm = TRUE ) 
-# }
 row.names(Meta) <- Meta$batchChannel
 
+#add an indicator for whether the sample was also in the bulk rna-seq lineage analysis. need to find common ID:
+dlpfcCovObj <- synapser::synGet('syn11024258')
+rosmap1 <- read.delim(dlpfcCovObj$path,stringsAsFactors = F)
+rosmapObj <- synapser::synGet('syn3191087')
+rosmap2 <- data.table::fread(rosmapObj$path,data.table=F)
 
-max(Log2_Normalized, na.rm=TRUE)
-max(sink_preWinzor, na.rm=TRUE)
-min(Log2_Normalized, na.rm=TRUE)
-min(sink_preWinzor, na.rm=TRUE)
-
-m1 <- data.matrix(Log2_Normalized)
-hist(m1)
-
-
+#removing bad batches in rosmap
+rosmap1 <- subset(rosmap1, rosmap1$Batch<7)
 
 
+#need to synchronize Sample IDs & join)
+rosmapIdObj <- synapser::synGet('syn3382527')
+rosmapId <- data.table::fread(rosmapIdObj$path,data.table=F)
+rosmapId <- dplyr::select(rosmapId,projid,rnaseq_id)
+rosmapRNAid<-dplyr::left_join(rosmapId,rosmap2)
+#remove duplicate rows
+rosmapRNAid <- unique(rosmapRNAid)
 
+rosmapRNAid2 <- subset(rosmapRNAid, select=c(rnaseq_id, projid, individualID))
+#names(rosmapRNAid2)[names(rosmapRNAid2) == "rnaseq_id"] <- "SampleID"
+names(rosmap1)[names(rosmap1) == "SampleID"] <- "rnaseq_id"
+
+rosmap_rnaseq <-dplyr::left_join(rosmap1,rosmapRNAid2, by="rnaseq_id")
+rosmap_rnaseq <- subset(rosmap_rnaseq, select=c(rnaseq_id, individualID))
+rosmap_rnaseq$rnaseq = 1
+
+Meta$proteomics = 1
+
+Meta <- merge(rosmap_rnaseq, Meta, all=TRUE)
+Meta$rnaseq[is.na(Meta$rnaseq)] <- 0
+Meta$proteomics[is.na(Meta$proteomics)] <- 0
+table(Meta$rnaseq, Meta$proteomics)
+Meta <- subset(Meta, Meta$proteomics==1)
+
+rownames(Meta) <- Meta$batchChannel
+
+#need to reorder Meta rows to match the protein data column order
+meta_ordered <- match(colnames(Log2_Normalized), rownames(Meta))
+Meta <- Meta[meta_ordered,]
+
+
+#fix gene | uniprot identifiers (per Jake: some genes changed after checking ensembl gene ids)
+p <- synapser::synGet('syn24216770')
+correct_geneIDs <- read.csv(p$path)
+Log2_Normalized$OldPeptideID <- rownames(Log2_Normalized)
+Log2_Normalized <- dplyr::left_join(Log2_Normalized, correct_geneIDs, by="OldPeptideID")
+rownames(Log2_Normalized3) <- Log2_Normalized$NewPeptideID
+Log2_Normalized$Old_Gene<-NULL
+Log2_Normalized$Old_Pep<-NULL
+Log2_Normalized$OldPeptideID<-NULL
+Log2_Normalized$New_Gene<-NULL
+Log2_Normalized$New_Pep<-NULL
+Log2_Normalized$NewPeptideID<-NULL
+Log2_Normalized$ENSG<-NULL
 
 
 
