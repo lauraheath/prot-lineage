@@ -134,7 +134,7 @@ p <- synapser::synGet('syn24216770')
 correct_geneIDs <- read.csv(p$path)
 Log2_Normalized$OldPeptideID <- rownames(Log2_Normalized)
 Log2_Normalized <- dplyr::left_join(Log2_Normalized, correct_geneIDs, by="OldPeptideID")
-rownames(Log2_Normalized3) <- Log2_Normalized$NewPeptideID
+rownames(Log2_Normalized) <- Log2_Normalized$NewPeptideID
 Log2_Normalized$Old_Gene<-NULL
 Log2_Normalized$Old_Pep<-NULL
 Log2_Normalized$OldPeptideID<-NULL
@@ -143,7 +143,9 @@ Log2_Normalized$New_Pep<-NULL
 Log2_Normalized$NewPeptideID<-NULL
 Log2_Normalized$ENSG<-NULL
 
-
+# save the log2-normalized matrix and metadata for next analyses:
+saveRDS(Log2_Normalized, file="~/prot-lineage/data/Log2_Normalized.rds")
+saveRDS(Meta, file="~/prot-lineage/data/Meta.rds")
 
 
 # # change the '|' to a period in the row names of the protein matrices

@@ -1,3 +1,6 @@
+Log2_Normalized <- readRDS(file="~/prot-lineage/data/Log2_Normalized.rds")
+Meta <- readRDS(file="~/prot-lineage/data/Meta.rds")
+
 #function to run monocle analysis
 RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by = NULL, 
                                   gene_short_name = NULL){ 
@@ -62,8 +65,8 @@ dim(ADgenes_prot1)
 
 genes2<-c()
 for (gene in unique(c(as.vector(ADgenes_prot1$Peptide)))){
-  if (gene %in% rownames(Dat3)){
-    genes2 <- c(genes2,which(rownames(Dat3)==gene))
+  if (gene %in% rownames(Dat)){
+    genes2 <- c(genes2,which(rownames(Dat)==gene))
   }
 }
 length(genes2)
@@ -133,7 +136,7 @@ g
 tiff(file='~/prot-lineage/figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
-g <- g + ggplot2::labs(color="diagnosis")
+g <- g + ggplot2::labs(color="State")
 g
 dev.off()
 
@@ -386,6 +389,8 @@ g
 dev.off()
 
 
+#save variables file
+write.csv(Fvariables, file="~/prot-lineage/data/Fvariables.csv", row.names=FALSE)
 
 
 ######### branch-specific differential expression analysis
@@ -401,18 +406,12 @@ l2$p_3 <- rep(0,length(gene_short_name))
 l2$p_4 <- rep(0,length(gene_short_name))
 l2$p_5 <- rep(0,length(gene_short_name))
 l2$p_6 <- rep(0,length(gene_short_name))
-l2$p_7 <- rep(0,length(gene_short_name))
-l2$p_8 <- rep(0,length(gene_short_name))
-l2$p_9 <- rep(0,length(gene_short_name))
 
 l2$d_2 <- rep(0,length(gene_short_name))
 l2$d_3 <- rep(0,length(gene_short_name))
 l2$d_4 <- rep(0,length(gene_short_name))
 l2$d_5 <- rep(0,length(gene_short_name))
 l2$d_6 <- rep(0,length(gene_short_name))
-l2$d_7 <- rep(0,length(gene_short_name))
-l2$d_8 <- rep(0,length(gene_short_name))
-l2$d_9 <- rep(0,length(gene_short_name))
 
 
 for (i in 1:length(gene_short_name)){
@@ -429,18 +428,12 @@ for (i in 1:length(gene_short_name)){
   l2$p_4[i] <- tk$s[3,4]
   l2$p_5[i] <- tk$s[4,4]
   l2$p_6[i] <- tk$s[5,4]
-  l2$p_7[i] <- tk$s[6,4]
-  l2$p_8[i] <- tk$s[7,4]
-  l2$p_9[i] <- tk$s[8,4]
   
   l2$d_2[i] <- tk$s[1,1]
   l2$d_3[i] <- tk$s[2,1]
   l2$d_4[i] <- tk$s[3,1]
   l2$d_5[i] <- tk$s[4,1]
   l2$d_6[i] <- tk$s[5,1]
-  l2$d_7[i] <- tk$s[6,1]
-  l2$d_8[i] <- tk$s[7,1]
-  l2$d_9[i] <- tk$s[8,1]
 }
 
 #Save data
