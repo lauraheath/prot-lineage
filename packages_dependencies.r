@@ -27,6 +27,8 @@ BiocManager::install("biomaRt")
 
 install.packages("kableExtra")
 install.packages("DescTools")
+install.packages("ggpubr")
+install.packages("enrichR")
 
 library(dplyr)
 library(ggplot2)
@@ -39,4 +41,5 @@ library(Matrix)
 library(kableExtra)
 library(DescTools)
 library(biomaRt)
+library(enrichR)
 

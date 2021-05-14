@@ -1,6 +1,7 @@
 ### extract the gene list from the rna-bulk analysis and proteomics analysis and see how many genes overlap
 #load rosmap filtered counts logCPM:
 dlpfcCPMObj <- synapser::synGet('syn8456638')
+
 Dat <- read.delim(dlpfcCPMObj$path,stringsAsFactors = F)
 
 #synapse id of dat2 file (rosmap covariates): syn8466814
@@ -151,4 +152,8 @@ gene_short_name <- Make.Gene.Symb(GeneNamesAD)
 
 
 #save gene list for later use:
-genes_rnaseq <- as.data.frame(gene_short_name)
+rnaseq_genes <- as.data.frame(gene_short_name)
+write.csv(rnaseq_genes, file="~/prot-lineage/data/rnaseq_genes.csv", row.names=FALSE)
+
+
+
