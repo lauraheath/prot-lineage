@@ -3,12 +3,12 @@
 #get bulk rnaseq pseudotimes and see if proteomic-derived pseudotimes are correlated with rna-seq pseudotimes, for those patients
 #included in both studies (n=107 in females)
 
-#firt run protein_lineage_monocle2.R to get Fvariables file, or read in variables file from data folder if saved
-Fvariables <- read.csv(file="~/prot-lineage/data/Fvariables.csv")
-MonRun <- readRDS(file="~/prot-lineage/data/Female_monocleObject.rds")
+#firt run protein_lineage_monocle2.R to get covariates file, or read in variables file from data folder if saved
+Fvariables <- read.csv(file="~/prot-lineage/results/prot_pstime_covars_F.csv")
+MonRun <- readRDS(file="~/prot-lineage/results/Female_monocleObject.rds")
 #males
-Fvariables <- read.csv(file="~/prot-lineage/data/Mvariables.csv")
-MonRun <- readRDS(file="~/prot-lineage/data/Male_monocleObject.rds")
+#Fvariables <- read.csv(file="~/prot-lineage/results/prot_pstime_covars_M.csv")
+#MonRun <- readRDS(file="~/prot-lineage/results/Male_monocleObject.rds")
 
 
 #also run rerun_rnaseq_lineage.r or use saved gene list from that script:
