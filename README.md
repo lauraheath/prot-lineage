@@ -15,8 +15,8 @@ To group state-specific GO enrichment terms by biodomain (annotated by Jesse Wil
 5. pseudotimes_biodoms.Rmd
 
 To make Venn diagrams and see correlation between RNA-seq pseudotimes and proteomics pseudotimes:
-6. rerun_rnaseq_lineage.r
-7. prot_vs_bulk_comparisons.r
+ 6. rerun_rnaseq_lineage.r
+ 7. prot_vs_bulk_comparisons.r
 
 
  
