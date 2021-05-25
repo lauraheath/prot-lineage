@@ -2,8 +2,10 @@
 
 #get bulk rnaseq pseudotimes and see if proteomic-derived pseudotimes are correlated with rna-seq pseudotimes, for those patients
 #included in both studies (n=107 in females)
+#need patient IDs across studies (run "get_proteins_metadata.r" to generate this file in your local directory)
+patients <- read.csv(file="~/prot-lineage/data/patientIDS_rnaseq_proteomics.csv")
 
-#firt run protein_lineage_monocle2.R to get covariates file, or read in variables file from data folder if saved
+#first run protein_lineage_monocle2.R to get covariates file, or read in variables file from data folder if saved
 Fvariables <- read.csv(file="~/prot-lineage/results/prot_pstime_covars_F.csv")
 MonRun <- readRDS(file="~/prot-lineage/results/Female_monocleObject.rds")
 #males
@@ -49,7 +51,7 @@ venn.diagram(
 
 
 #venn diagram of overlapping patients in rnaseq and protein studies
-patients <- read.csv(file="~/prot-lineage/data/patientIDS_rnaseq_proteomics.csv")
+
 patients$individualID<-as.character(patients$individualID)
 rna_ps <- subset(patients, patients$rnaseq==1)
 prot_ps <- subset(patients, patients$proteomics==1)
@@ -87,10 +89,12 @@ Fvariables$cogdx <- factor(Fvariables$cogdx,levels = c(1:6))
 
 #upload pseudotimes from bulk rna-seq lineage paper
 #females
-#p <- synapser::synGet('syn22822695')
-#males
-p <- synapser::synGet('syn23446654')
+p <- synapser::synGet('syn22822695')
 rnaseq_pstimes <- read.csv(p$path)
+#males
+#p <- synapser::synGet('syn23446654')
+#rnaseq_pstimes <- read.csv(p$path)
+
 rnaseq_pstimes$rnaseq_pseudotime_sc <- scale(rnaseq_pstimes$Pseudotime, center=F)
 names(rnaseq_pstimes)[names(rnaseq_pstimes) == "SampleID"] <- "rnaseqID"
 names(rnaseq_pstimes)[names(rnaseq_pstimes) == "State"] <- "rnaseq_State"
@@ -157,16 +161,6 @@ ggpubr::ggscatter(corrs, x="pseudotime_sc", y="rnaseq_pseudotime_sc", color = "c
                   cor.coef=TRUE, cor.method="pearson",
                   xlab="Proteomics Pseudotime", ylab="RNA-seq Pseudotime")
 dev.off()
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -23,12 +23,12 @@ proj.dir <- '~/prot-lineage/'
 
 # setup
 #setup
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("org.Hs.eg.db", "fgsea", "clusterProfiler"))
-library(org.Hs.eg.db)
-library(fgsea)
-library(tidyverse)
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#     Ωinstall.packages("BiocManager")
+# BiocManager::install(c("org.Hs.eg.db", "fgsea", "clusterProfiler"))
+# library(org.Hs.eg.db)
+# library(fgsea)
+# library(tidyverse)
 
 # data -- biological domain definitions
 biodomObj <- synapser::synGet('syn25764758')
@@ -65,15 +65,22 @@ dom.cols <- c(
 # data -- pseudotime ANOVA results tables
 #dlpfc.pt <- read_csv(file="~/prot-lineage/results/female_DEanova_stats.csv") 
 DEobj <- synapser::synGet('syn25764747')
-dlpfc.pt <- read.csv(DEobj$path)
+dlpfc.pt2 <- read.csv(DEobj$path)
 
-#run over again from hre for males
+#run over again from here for males
 #dlpfc.pt <- read_csv(file="~/prot-lineage/results/male_DEanova_stats.csv") 
 #DEobj <- synapser::synGet('syn25764751')
 #dlpfc.pt <- read.csv(DEobj$path) 
 
+#RNASeq results uploaded into data folder from Mukherjee et al supplementary material
+# dlpfc.pt <- read.csv(file="~/prot-lineage/data/DLPFC_DEgenes_rnaseq.csv")
+# names(dlpfc.pt)[names(dlpfc.pt) == "gene_names"] <- "gene_short_name"
+# 
+# dlpfc.pt <- read.csv(file="~/prot-lineage/data/TCX_DEgenes_rnaseq.csv")
+# names(dlpfc.pt)[names(dlpfc.pt) == "gene_names"] <- "gene_short_name"
 
 # ID re-mapping -- biodomains are defined by ENSEMBL and/or ENTREZ IDs
+# (a small percentage will fail to map)
 ids <- clusterProfiler::bitr( 
   dlpfc.pt$gene_short_name, fromType = 'SYMBOL', toType = c('ENTREZID','ENSEMBL'), OrgDb='org.Hs.eg.db' )
 dlpfc.pt <- ids %>% 
@@ -195,7 +202,7 @@ try(gridExtra::grid.arrange(enr_plots[[2]]), silent=T)
 ```
 #plot biodomains dotplot for state 2 only
 ```{r}
-plot(lol_plots[[2]])
+plot(lol_plots[[4]])
 ```
 
 # session

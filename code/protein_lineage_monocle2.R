@@ -71,11 +71,15 @@ dim(Dat2)
 
 #msex==0 is female, msex==1 is male; run separately for sex-specific analysis
 In_S <- which(Meta$msex == 0)
-In_S <- which(Meta$msex == 1)
+#In_S <- which(Meta$msex == 1)
 Dat2 <- Dat2[,In_S]
 Meta2 <- Meta[In_S,]
 
 gene_short_name <- rownames(Dat2)
+
+#save the protein matrix with rownames for later
+saveRDS(Dat2, file="~/prot-lineage/results/Female_matrix_rownames.rds")
+#saveRDS(Dat2, file="~/prot-lineage/results/Male_matrix_rownames.rds")
 temp <- Dat2
 temp2 <- Meta2
 
@@ -118,12 +122,12 @@ MonRun$State2[MonRun$State == 6] <- 5
 MonRun$State2[MonRun$State == 7] <- 6
 
 #male samples:
-MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 3] <- 2
-MonRun$State2[MonRun$State == 11] <- 3
-MonRun$State2[MonRun$State == 7] <- 6
-MonRun$State2[MonRun$State == 8] <- 7
-MonRun$State2[MonRun$State == 10] <- 7
+# MonRun$State2 <- MonRun$State
+# MonRun$State2[MonRun$State == 3] <- 2
+# MonRun$State2[MonRun$State == 11] <- 3
+# MonRun$State2[MonRun$State == 7] <- 6
+# MonRun$State2[MonRun$State == 8] <- 7
+# MonRun$State2[MonRun$State == 10] <- 7
 # 
 
 
@@ -135,11 +139,10 @@ g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="diagnosis")
 g
 
-#save the monocle object and sex-specific protein matrix for later:
+#save the monocle object for later:
 saveRDS(MonRun, file="~/prot-lineage/results/Female_monocleObject.rds")
-saveRDS(temp, file="~/prot-lineage/results/Female_matrix.rds")
 #saveRDS(MonRun, file="~/prot-lineage/results/Male_monocleObject.rds")
-#saveRDS(temp, file="~/prot-lineage/results/Male_matrix.rds")
+
 
 ###### FIGURES #########
 #tiff(file='~/prot-lineage/figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
