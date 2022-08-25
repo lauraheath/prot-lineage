@@ -1,11 +1,10 @@
 library(limma)
 
-## Import Data
+## Import batch-corrected, centered, Log2-transformed protein expression matrix
 p <- synapser::synGet('syn21266454')
 Log2_Normalized <- read.csv(p$path)
 
-
-#Fix protein names with most updated
+#Fix protein names (some out of date)
 p1 <- synapser::synGet('syn24216770')
 correct_geneIDs <- read.csv(p1$path)
 #allresults$OldPeptideID <- rownames(allresults)
@@ -24,11 +23,11 @@ Log2_Normalized$ENSG<-NULL
 p2 <- synapser::synGet('syn21323404')
 Meta <- read.csv(p2$path)
 
-# - get patient BioSpecimin Data with rosmap individual ID: syn21323366
+# - get patient BioSpecimin Data with rosmap individual ID
 p3 <- synapser::synGet('syn21323366')
 BioSpecimen <- read.csv(p3$path)
 BioSpecimen <- BioSpecimen[ BioSpecimen$assay == 'TMT quantitation', ]
-
+#get rid of pooled samples
 Meta <- Meta[ Meta$isAssayControl==FALSE,]
 Meta <- dplyr::left_join(Meta, BioSpecimen, by = 'specimenID' )
 
@@ -40,7 +39,6 @@ Meta <- Meta[ ,colSums(is.na(Meta))<nrow(Meta) ]
 row.names( Meta ) <- Meta$batchChannel
 Meta <- Meta[ colnames(Log2_Normalized), ]
 
-# Harmonize case-control status
 Meta$braaksc <- as.numeric(Meta$braaksc)
 Meta$ceradsc <- as.numeric(Meta$ceradsc)
 Meta$cogdx <- as.numeric(Meta$cogdx)
@@ -55,7 +53,7 @@ p5 <- synapser::synGet('syn23573928')
 Mast <- read.csv(p5$path)
 Mast<- Mast[ !duplicated(Mast$individualID), ]
 Meta <- dplyr::left_join(Meta[ , colnames(Meta)[ (colnames(Meta) %in% c('age_at_visit_max', 'age_first_ad_dx', 'age_death') )==F ] ], Mast[, c('individualID', 'age_at_visit_max', 'age_first_ad_dx', 'age_death')],by = 'individualID')
-#Convert APOE (0,1,2 for #e4 alleles)
+#Convert APOE into numeric (0,1,2 for #e4 alleles)
 Meta$apoe_genotype <- as.numeric( Meta$apoe_genotype )
 APOE <- as.numeric(names( table(Meta$apoe_genotype) ))
 names(APOE) <- APOE
@@ -63,18 +61,12 @@ APOE[names( table(Meta$apoe_genotype) )] <- 0
 APOE[grepl("4",names(APOE))] <- 1
 APOE[grepl("44",names(APOE))] <- 2
 Meta$APOE <- as.factor( APOE[ as.character(Meta$apoe_genotype) ] )
-## Winzorize Expression Data
-# sink_preWinzor<- Log2_Normalized
-# for( i in 1:dim(Log2_Normalized)[1] ){
-#   Log2_Normalized[i,] <- DescTools::Winsorize( as.numeric(Log2_Normalized[i,]), na.rm = TRUE ) 
-# }
+
 ####Metadata file for AD case-control Diagnosis only for analysis
 Meta_D <- Meta[ Meta$diagnosis %in% c('AD','control'), ]
 #Code Sex and Diagnosis as Factors
 Meta$msex <- as.factor(Meta$msex)
 Meta_D$diagnosis <- as.factor(Meta_D$diagnosis)
-
-
 #pare log2 matrix to AD case and controls
 ADmatrix <- Log2_Normalized[Meta_D$batchChannel]
 
@@ -93,7 +85,7 @@ topTable(fit)
 #extract results for all genes and get 95% confidence limits
 allresults <- topTable(fit, n=Inf, confint=0.95)
 
-#relabel columns to match lfq data for agora, and get ENSG values
+#relabel columns to match lfq data for agora, and get ENSG names
 
 allresults$NewPeptideID <- rownames(allresults)
 allresults <- dplyr::left_join(allresults, correct_geneIDs, by="NewPeptideID")
