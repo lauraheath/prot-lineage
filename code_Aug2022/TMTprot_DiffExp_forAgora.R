@@ -7,7 +7,7 @@ Log2_Normalized <- read.csv(p$path)
 #Fix protein names (some out of date)
 p1 <- synapser::synGet('syn24216770')
 correct_geneIDs <- read.csv(p1$path)
-#allresults$OldPeptideID <- rownames(allresults)
+
 names(Log2_Normalized)[names(Log2_Normalized) == 'X'] <- 'OldPeptideID'
 Log2_Normalized <- dplyr::left_join(Log2_Normalized, correct_geneIDs, by="OldPeptideID")
 rownames(Log2_Normalized) <- Log2_Normalized$NewPeptideID
@@ -23,7 +23,7 @@ Log2_Normalized$ENSG<-NULL
 p2 <- synapser::synGet('syn21323404')
 Meta <- read.csv(p2$path)
 
-# - get patient BioSpecimin Data with rosmap individual ID
+# - get patient BioSpecimen Data with rosmap individual ID
 p3 <- synapser::synGet('syn21323366')
 BioSpecimen <- read.csv(p3$path)
 BioSpecimen <- BioSpecimen[ BioSpecimen$assay == 'TMT quantitation', ]
@@ -113,7 +113,16 @@ allresults <- allresults[, col_order]
 
 
 #save to synapse
-write.csv(allresults, file="~/prot-lineage/ROSMAP_DiffExp_TMTproteins.csv", row.names=FALSE)
+write.csv(allresults, file="~/prot-lineage/data_objects/ROSMAP_DiffExp_TMTproteins.csv", row.names=FALSE)
 #save to synapse
-file <- synapser::File(path='~/prot-lineage/ROSMAP_DiffExp_TMTproteins.csv', parentId='syn35219190')
+file <- synapser::File(path='~/prot-lineage/data_objects/ROSMAP_DiffExp_TMTproteins.csv', parentId='syn35219190')
 file <- synapser::synStore(file)
+
+#save data objects to local folder for downstream pseudotime analyses
+write.csv(Log2_Normalized, file="~/prot-lineage/data_objects/Log2_Normalized.csv")
+write.csv(Meta, file="~/prot-lineage/data_objects/TMT_metadata.csv")
+
+
+
+
+
