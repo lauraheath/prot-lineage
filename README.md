@@ -10,15 +10,15 @@ To obtain pseudotimes, differentially expressed genes by branch, and group DE ge
 2. protein_lineage_monocle2.R
 3. DE_state1reference.R
 
-To group state-specific GO enrichment terms by biodomain (annotated by Jesse Wiley, R markdown notebook by Greg Cary):
-5. pseudotimes_biodoms.Rmd
+To group state-specific GO enrichment terms by biodomain (annotated by Jesse Wiley, R script by Greg Cary):
+5. biodomains_proteomics.R
 
 To make Venn diagrams and see correlation between RNA-seq pseudotimes and proteomics pseudotimes:
  6. rerun_rnaseq_lineage.r
  7. prot_vs_bulk_comparisons.r
  
  Differentially expressed proteins between AD case and control are stored here: syn35221005
- Code to generate differentially expressed proteins between AD case and control in github repo: TMTprot_DiffExp_forAgora.R
+ Code to generate differentially expressed proteins between AD case and control: TMTprot_DiffExp_forAgora.R
 
 
  
