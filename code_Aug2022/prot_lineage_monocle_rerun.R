@@ -1,12 +1,57 @@
 #first run "TMTprot_DiffExp_forAgora.R" script and save the protein matrix and metadata file in your directory
 library(monocle)
 
+#upload batch-corrected, median-abundance-centered log2-transformed matrix:
+p <- synapser::synGet('syn21266454')
+Log2_Normalized <- read.csv(p$path)
 
-Log2_Normalized <- read.csv(file="~/prot-lineage/data_objects/Log2_Normalized.csv")
-rownames(Log2_Normalized) <- Log2_Normalized$X
-Log2_Normalized$X<-NULL
-Meta <- read.csv(file="~/prot-lineage/data_objects/TMT_metadata.csv")
+#Fix protein names (some out of date)
+p1 <- synapser::synGet('syn24216770')
+correct_geneIDs <- read.csv(p1$path)
 
+names(Log2_Normalized)[names(Log2_Normalized) == 'X'] <- 'OldPeptideID'
+Log2_Normalized <- dplyr::left_join(Log2_Normalized, correct_geneIDs, by="OldPeptideID")
+rownames(Log2_Normalized) <- Log2_Normalized$NewPeptideID
+Log2_Normalized$OldPeptideID<-NULL
+Log2_Normalized$NewPeptideID<-NULL
+Log2_Normalized$Old_Gene<-NULL
+Log2_Normalized$Old_Pep<-NULL
+Log2_Normalized$New_Gene<-NULL
+Log2_Normalized$New_Pep<-NULL
+Log2_Normalized$ENSG<-NULL
+
+#save the entire matrix in directory for later:
+write.csv(Log2_Normalized, file='~/prot-lineage/data_objects/Log2_Normalized.csv')
+
+
+#upload protein metadata
+p2 <- synapser::synGet('syn21323404')
+TMTmeta <- read.csv(p2$path)
+#delete pool samples
+TMTmeta <- TMTmeta[TMTmeta$isAssayControl == FALSE,]
+
+#upload biospecimen data
+p3 <- synapser::synGet('syn21323366')
+biospec <- read.csv(p3$path)
+biospec <- biospec[biospec$assay == 'TMT quantitation',]
+#keep first two columns
+biospec <- select(biospec, individualID, specimenID)
+
+#join metadata types to get individualID linked to sampleID and batch channel
+TMTmeta <- left_join(TMTmeta, biospec, by = 'specimenID')
+
+
+#get clinical metadata
+p4 <- synapser::synGet('syn3191087')
+clinical <- read.csv(p4$path) 
+Meta <- left_join(TMTmeta, clinical, by = 'individualID')
+rownames(Meta) <- Meta$batchChannel
+# Harmonize case-control status
+Meta$diagnosis <- "other"
+Meta$diagnosis[Meta$cogdx == 1 & Meta$braaksc <= 3 & Meta$ceradsc >= 3] <- "control"
+Meta$diagnosis[Meta$cogdx == 4 & Meta$braaksc >= 4 & Meta$ceradsc <= 2] <- "AD"
+
+#
 #function to run monocle analysis
 RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by = NULL, 
                                   gene_short_name = NULL){ 
@@ -33,13 +78,13 @@ RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by
   HSMM <- newCellDataSet(as.matrix(HSMM_expr_matrix),
                          phenoData = pd,
                          featureData = fd,
-                         expressionFamily=tobit())
+                         expressionFamily=gaussianff())
   
   #HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth, residualModelFormulaStr = ~pmi+educ)
-  HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth)
+  HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth, norm_method='none')
 
-  #HSMM <- orderCells(HSMM, reverse=TRUE)
-  HSMM <- orderCells(HSMM)
+  HSMM <- orderCells(HSMM, reverse=TRUE)
+  #HSMM <- orderCells(HSMM)
   if(is.null(C_by)){
     plot_cell_trajectory(HSMM, color_by="Labels")
   }
@@ -55,6 +100,14 @@ RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by
 Dat <- Log2_Normalized
 Dat[is.na(Dat)] <- 0
 
+#subset by sex: msex==0 is female, msex==1 is male; run separately for sex-specific analysis
+In_S <- which(Meta$msex == 0)
+#In_S <- which(Meta$msex == 1)
+Dat2 <- Dat[,In_S]
+saveRDS(Dat2, file="~/prot-lineage/data_objects/Female_prot_matrix.rds")
+#saveRDS(Dat2, file="~/prot-lineage/data_objects/Male_prot_matrix.rds")
+Meta2 <- Meta[In_S,]
+
 
 #get list of proteins that are differentially expressed between AD case & control (DE analysis run for AGORA, Aug 2022)
 p <- synapser::synGet('syn35221005')
@@ -65,27 +118,16 @@ dim(ADgenes_prot1)
 #subset the protein matrix
 genes2<-c()
 for (gene in unique(c(as.vector(ADgenes_prot1$UniqID)))){
-  if (gene %in% rownames(Dat)){
-    genes2 <- c(genes2,which(rownames(Dat)==gene))
+  if (gene %in% rownames(Dat2)){
+    genes2 <- c(genes2,which(rownames(Dat2)==gene))
   }
 }
 length(genes2)
-Dat2 <- Dat[genes2,]
+Dat2 <- Dat2[genes2,]
 dim(Dat2)
-
-
-
-#msex==0 is female, msex==1 is male; run separately for sex-specific analysis
-#In_S <- which(Meta$msex == 0)
-In_S <- which(Meta$msex == 1)
-Dat2 <- Dat2[,In_S]
-Meta2 <- Meta[In_S,]
 
 gene_short_name <- rownames(Dat2)
 
-#save the protein matrix with rownames for later
-#saveRDS(Dat2, file="~/prot-lineage/data_objects/Female_matrix_rownames.rds")
-saveRDS(Dat2, file="~/prot-lineage/data_objects/Male_matrix_rownames.rds")
 temp <- Dat2
 temp2 <- Meta2
 
@@ -99,6 +141,7 @@ rownames(temp2)<-NULL
 
 
 #Run Monocle2: (ignore warning messages that occur)
+#in Monocle function, reverse order for male samples
 MonRun <- RunMonocleTobit(temp, temp2, C_by = 'Pseudotime',gene_short_name = gene_short_name)
 
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 1)

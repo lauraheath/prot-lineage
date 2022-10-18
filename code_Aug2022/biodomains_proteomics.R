@@ -38,9 +38,13 @@ biodom <- readRDS( synapser::synGet('syn25428992')$path  )
 biodom.annotated <- biodom %>% filter(!is.na(n_symbol)) %>% pull(symbol, name=GOterm_Name)
 dom.cols <- read_csv( synGet('syn26856828')$path )
 
-#pt_data <- read_csv( synGet('syn27260460')$path )
+#female data
+pt_data <- read_csv( synGet('syn40616521')$path )
 #pt_data <- read.csv(file="~/prot-lineage/data_objects/female_DEanova_stats.csv")
-pt_data <- read.csv(file="~/prot-lineage/data_objects/male_DEanova_stats.csv")
+
+#male data
+pt_data <- read_csv( synGet('syn40621972')$path )
+#pt_data <- read.csv(file="~/prot-lineage/data_objects/male_DEanova_stats.csv")
 
 # Run enrichments by pseudotime state -------------------------------------
 
@@ -76,8 +80,8 @@ enr <- enr %>%
 
 # plot! -------------------------------------------------------------------
 
-#tiff(file='~/prot-lineage/figures/FEMALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/FEMALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
 
 enr %>%   
   ggplot(aes( factor(state), NES ))+ 
@@ -107,19 +111,19 @@ enr %>%
   geom_hline(yintercept = 0, lty = 3)+
   facet_wrap(~Biodomain)+
   labs(x='')+  coord_flip() + theme(legend.position = 'right') +
-  #ggtitle('Female proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
-  ggtitle('Male proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
+  ggtitle('Female proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
+  #ggtitle('Male proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
 dev.off()
 
 
 
 enr$leadingEdge <- as.character(enr$leadingEdge)
 
-write.csv(enr, file="~/prot-lineage/data_objects/F_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/F_GOenrichment.csv', parentId='syn25607662')
+write.csv(enr, file="~/prot-lineage/data_objects/F_GOenrichment_ALLGENES.csv", row.names=FALSE)
+file <- synapser::File(path='~/prot-lineage/data_objects/F_GOenrichment_ALLGENES.csv', parentId='syn25607662')
 file <- synapser::synStore(file)
 
 
-write.csv(enr, file="~/prot-lineage/data_objects/M_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/M_GOenrichment.csv', parentId='syn25607662')
+write.csv(enr, file="~/prot-lineage/data_objects/M_GOenrichment_ALLGENES.csv", row.names=FALSE)
+file <- synapser::File(path='~/prot-lineage/data_objects/M_GOenrichment_ALLGENES.csv', parentId='syn25607662')
 file <- synapser::synStore(file)
