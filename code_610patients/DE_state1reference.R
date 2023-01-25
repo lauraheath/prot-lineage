@@ -1,14 +1,14 @@
 ######### branch-specific differential expression analysis
 
-#need Monrun object from prot_lineage_monocle_rerun.R and gene_short_name vector
-#script for males following script for females (5 states in males, 8 in females)
-#upload entire matrix first to look at associations with ALL genes, not just DE genes included for trajectory model
+#need Monrun object from prot_lineage_monocle_rerun.R
+#script for males following script for females 
+#upload entire matrix to look at associations with ALL genes, not just DE genes included for trajectory model
 
 MonRun <- readRDS(file="~/prot-lineage/data_objects/MonRun_prot_female.RDS")
 temp <- readRDS(file="~/prot-lineage/data_objects/Female_prot_matrix.rds")
 gene_short_name <- rownames(temp)
 table(MonRun$State2)
-#there are 6 states in the female tree
+#there are 7 states in the female tree
 #pre-process data for ANOVA test
 l2 <- list()
 l2$gene_names <- gene_short_name
@@ -18,7 +18,7 @@ l2$p_4 <- rep(0,length(gene_short_name))
 l2$p_5 <- rep(0,length(gene_short_name))
 l2$p_6 <- rep(0,length(gene_short_name))
 l2$p_7 <- rep(0,length(gene_short_name))
-l2$p_8 <- rep(0,length(gene_short_name))
+#l2$p_8 <- rep(0,length(gene_short_name))
 
 l2$d_2 <- rep(0,length(gene_short_name))
 l2$d_3 <- rep(0,length(gene_short_name))
@@ -26,7 +26,7 @@ l2$d_4 <- rep(0,length(gene_short_name))
 l2$d_5 <- rep(0,length(gene_short_name))
 l2$d_6 <- rep(0,length(gene_short_name))
 l2$d_7 <- rep(0,length(gene_short_name))
-l2$d_8 <- rep(0,length(gene_short_name))
+#l2$d_8 <- rep(0,length(gene_short_name))
 
 for (i in 1:length(gene_short_name)){
   l <- list()
@@ -43,7 +43,7 @@ for (i in 1:length(gene_short_name)){
   l2$p_5[i] <- tk$s[4,4]
   l2$p_6[i] <- tk$s[5,4]
   l2$p_7[i] <- tk$s[6,4]
-  l2$p_8[i] <- tk$s[7,4]
+#  l2$p_8[i] <- tk$s[7,4]
   
   l2$d_2[i] <- tk$s[1,1]
   l2$d_3[i] <- tk$s[2,1]
@@ -51,7 +51,7 @@ for (i in 1:length(gene_short_name)){
   l2$d_5[i] <- tk$s[4,1]
   l2$d_6[i] <- tk$s[5,1]
   l2$d_7[i] <- tk$s[6,1]
-  l2$d_8[i] <- tk$s[7,1]
+#  l2$d_8[i] <- tk$s[7,1]
 }
 
 #save the data
@@ -83,7 +83,7 @@ table(MonRun$State2)
 
 MonRun$State2<-as.character(MonRun$State2)
 MonRun$State2<-as.factor(MonRun$State2)
-#for males there are 5 states
+#for males there are 7 states
 #pre-process data for ANOVA test
 l2 <- list()
 l2$gene_names <- gene_short_name
@@ -91,12 +91,15 @@ l2$p_2 <- rep(0,length(gene_short_name))
 l2$p_3 <- rep(0,length(gene_short_name))
 l2$p_4 <- rep(0,length(gene_short_name))
 l2$p_5 <- rep(0,length(gene_short_name))
+l2$p_6 <- rep(0,length(gene_short_name))
+l2$p_7 <- rep(0,length(gene_short_name))
 
 l2$d_2 <- rep(0,length(gene_short_name))
 l2$d_3 <- rep(0,length(gene_short_name))
 l2$d_4 <- rep(0,length(gene_short_name))
 l2$d_5 <- rep(0,length(gene_short_name))
-
+l2$d_6 <- rep(0,length(gene_short_name))
+l2$d_7 <- rep(0,length(gene_short_name))
 
 for (i in 1:length(gene_short_name)){
   l <- list()
@@ -111,11 +114,15 @@ for (i in 1:length(gene_short_name)){
   l2$p_3[i] <- tk$s[2,4]
   l2$p_4[i] <- tk$s[3,4]
   l2$p_5[i] <- tk$s[4,4]
+  l2$p_6[i] <- tk$s[5,4]
+  l2$p_7[i] <- tk$s[6,4]
   
   l2$d_2[i] <- tk$s[1,1]
   l2$d_3[i] <- tk$s[2,1]
   l2$d_4[i] <- tk$s[3,1]
   l2$d_5[i] <- tk$s[4,1]
+  l2$d_6[i] <- tk$s[5,1]
+  l2$d_7[i] <- tk$s[6,1]
 }
 
 #save the data

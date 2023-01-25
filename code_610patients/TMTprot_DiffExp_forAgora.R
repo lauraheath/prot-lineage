@@ -36,52 +36,24 @@ p2 <- synapser::synGet('syn28723027')
 Meta <- read.csv(p2$path)
 
 
-# # - get patient BioSpecimen Data with rosmap individual ID
-# p3 <- synapser::synGet('syn21323366')
-# BioSpecimen <- read.csv(p3$path)
-# BioSpecimen <- BioSpecimen[ BioSpecimen$assay == 'TMT quantitation', ]
-# #get rid of pooled samples
-# Meta <- Meta[ Meta$isAssayControl==FALSE,]
-# Meta <- dplyr::left_join(Meta, BioSpecimen, by = 'specimenID' )
-# 
-# #get clinical metadata
-# p4 <- synapser::synGet('syn3191087')
-# Clinical <- read.csv(p4$path)
-# Meta <- dplyr::left_join(Meta, Clinical, by = 'individualID' )
-# Meta <- Meta[ ,colSums(is.na(Meta))<nrow(Meta) ] 
-# row.names( Meta ) <- Meta$batchChannel
-# Meta <- Meta[ colnames(Log2_Normalized), ]
-# 
-# Meta$braaksc <- as.numeric(Meta$braaksc)
-# Meta$ceradsc <- as.numeric(Meta$ceradsc)
-# Meta$cogdx <- as.numeric(Meta$cogdx)
-# # Harmonize case-control status
-# Meta$diagnosis <- "other"
-# Meta$diagnosis[Meta$cogdx == 1 & Meta$braaksc <= 3 & Meta$ceradsc >= 3] <- "control"
-# Meta$diagnosis[Meta$cogdx == 4 & Meta$braaksc >= 4 & Meta$ceradsc <= 2] <- "AD"
-# table(Meta$diagnosis)
-# 
-# ## Add Ages over 90 for modeling
-# p5 <- synapser::synGet('syn23573928')
-# Mast <- read.csv(p5$path)
-# Mast<- Mast[ !duplicated(Mast$individualID), ]
-# Meta <- dplyr::left_join(Meta[ , colnames(Meta)[ (colnames(Meta) %in% c('age_at_visit_max', 'age_first_ad_dx', 'age_death') )==F ] ], Mast[, c('individualID', 'age_at_visit_max', 'age_first_ad_dx', 'age_death')],by = 'individualID')
-# #Convert APOE into numeric (0,1,2 for #e4 alleles)
-# Meta$apoe_genotype <- as.numeric( Meta$apoe_genotype )
-# APOE <- as.numeric(names( table(Meta$apoe_genotype) ))
-# names(APOE) <- APOE
-# APOE[names( table(Meta$apoe_genotype) )] <- 0
-# APOE[grepl("4",names(APOE))] <- 1
-# APOE[grepl("44",names(APOE))] <- 2
-# Meta$APOE <- as.factor( APOE[ as.character(Meta$apoe_genotype) ] )
-
-
 # Harmonize case-control status
 Meta$diagnosis <- "other"
 Meta$diagnosis[Meta$cogdx == 1 & Meta$braaksc <= 3 & Meta$ceradsc_RADCnonStd >= 3] <- "control"
 Meta$diagnosis[Meta$cogdx == 4 & Meta$braaksc >= 4 & Meta$ceradsc_RADCnonStd <= 2] <- "AD"
 table(Meta$diagnosis, Meta$msex)
 
+#There are duplicate individualIDs in this data (2 samples run on 6 individuals). Only want one sample per patient
+#look at the duplicate samples metadata
+n_occur <- data.frame(table(Meta$projid.ROSMAP))
+names(n_occur)[names(n_occur) == 'Var1'] <- 'projid.ROSMAP'
+metadata2 <- merge(Meta, n_occur)
+metadata2 <- subset(metadata2, metadata2$Freq==2)
+
+#specimen b19.130N, b49.127C, b43.127C, b02.127C, and b21.130C are outliers in e. dammer's connectivity analysis 
+#also delete specimen b57.127N
+rownames(Meta) <- Meta$batch.channel
+Meta3 <- Meta[!(row.names(Meta) %in% c('b19.130N','b49.127C','b43.127C','b02.127C','b21.130C', 'b57.127N')),]
+length(unique(Meta3$projid.ROSMAP))
 
 
 
@@ -225,8 +197,10 @@ allresults3 <- allresults3[, col_order]
 #file <- synapser::synStore(file)
 
 #save data objects to local folder for downstream pseudotime analyses
-write.csv(Log2_Normalized, file="~/prot-lineage/data_objects/Log2_Normalized.csv")
-write.csv(Meta, file="~/prot-lineage/data_objects/TMT_metadata.csv")
+#prune original log2 matrix to include only the samples in Meta3 (to avoid duplicate projids)
+ADmatrix2 <- Log2_Normalized[Meta3$batch.channel]
+write.csv(ADmatrix2, file="~/prot-lineage/data_objects/Log2_Normalized.csv")
+write.csv(Meta3, file="~/prot-lineage/data_objects/TMT_metadata.csv")
 
 
 #old DE proteins

@@ -7,9 +7,10 @@ setwd('~/prot-lineage/')
 #upload batch-corrected, median-abundance-centered log2-transformed matrix:
 #p <- synapser::synGet('syn21266454')
 #Log2_Normalized <- read.csv(p$path)
-#upload batch-corrected, median-abundance-centered log2-transformed matrix with next batch of TMT proteins (N = 610)
-p <- synapser::synGet('syn28723003')
-Log2_Normalized <- read.csv(p$path)
+#upload batch-corrected, median-abundance-centered log2-transformed matrix with next batch of TMT proteins (N = 604),
+#saved from TMTprot_DiffExp_forAgora.R so duplicate samples removed
+#p <- synapser::synGet('syn28723003')
+Log2_Normalized <- read.csv(file='data_objects/Log2_Normalized.csv')
 
 rownames(Log2_Normalized) <- Log2_Normalized$X
 Log2_Normalized$X<-NULL
@@ -20,8 +21,8 @@ Log2_Normalized$X<-NULL
 #}
 
 
-p2 <- synapser::synGet('syn28723027')
-Meta <- read.csv(p2$path)
+#p2 <- synapser::synGet('syn28723027')
+Meta <- read.csv(file='data_objects/TMT_metadata.csv')
 
 
 # Harmonize case-control status
@@ -62,8 +63,8 @@ RunMonocleTobit <- function(Dat, Labels, max_components=2, meth = 'DDRTree',C_by
   #HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth, residualModelFormulaStr = ~pmi+educ)
   HSMM <- reduceDimension(HSMM, max_components=max_components, reduction_method = meth, norm_method='none')
 
-  HSMM <- orderCells(HSMM, reverse=TRUE)
-  #HSMM <- orderCells(HSMM)
+  #HSMM <- orderCells(HSMM, reverse=TRUE)
+  HSMM <- orderCells(HSMM)
   if(is.null(C_by)){
     plot_cell_trajectory(HSMM, color_by="Labels")
   }
@@ -80,8 +81,8 @@ Dat <- Log2_Normalized
 Dat[is.na(Dat)] <- 0
 
 #subset by sex: msex==0 is female, msex==1 is male; run separately for sex-specific analysis
-#In_S <- which(Meta$msex == 0)
-In_S <- which(Meta$msex == 1)
+In_S <- which(Meta$msex == 0)
+#In_S <- which(Meta$msex == 1)
 Dat2 <- Dat[,In_S]
 Meta2 <- Meta[In_S,]
 
@@ -104,7 +105,7 @@ saveRDS(Dat3, file="~/prot-lineage/data_objects/Male_prot_matrix.rds")
 
 
 
-#get list of proteins that are differentially expressed between AD case & control (DE analysis run for AGORA, Aug 2022)
+#get list of proteins that are differentially expressed between AD case & control (DE analysis run for AGORA)
 p <- synapser::synGet('syn50449887')
 ADgenes_prot <- read.csv(p$path)
 #for sex-adjusted DE proteins:
@@ -156,6 +157,7 @@ rownames(temp2)<-NULL
 
 
 #Run Monocle2: (ignore warning messages that occur)
+#need to reverse order for male samples
 MonRun <- RunMonocleTobit(temp, temp2, C_by = 'Pseudotime',gene_short_name = gene_short_name)
 
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 1)
@@ -172,8 +174,10 @@ g <- g + ggplot2::labs(color="State")
 g
 
 
-#for female tree, reorder with state 3 as the root state, which has the greatest concentration of control patients
-MonRun <- orderCells(MonRun, root_state = 3)
+table(MonRun$State, MonRun$diagnosis)
+
+#for female tree, reorder with state 2 as the root state, which has the greatest concentration of control pts & fewer AD pts
+MonRun <- orderCells(MonRun, root_state = 2)
 
 plot_cell_trajectory(MonRun,color_by = "Pseudotime",show_branch_points=F,use_color_gradient = F,cell_size = 1.5)
 
@@ -183,28 +187,45 @@ plot_cell_trajectory(MonRun,color_by = "State",show_branch_points=F,use_color_gr
 
 #Relabel the states so they are in order along the trajectory, and collapse small states
 #female samples
+# MonRun$State2 <- MonRun$State
+# MonRun$State2[MonRun$State == 1] <- 1
+# MonRun$State2[MonRun$State == 2] <- 2
+# MonRun$State2[MonRun$State == 3] <- 3
+# MonRun$State2[MonRun$State == 4] <- 3
+# MonRun$State2[MonRun$State == 5] <- 4
+# MonRun$State2[MonRun$State == 11] <- 4
+# MonRun$State2[MonRun$State == 6] <- 5
+# MonRun$State2[MonRun$State == 7] <- 5
+# MonRun$State2[MonRun$State == 8] <- 5
+# MonRun$State2[MonRun$State == 10] <- 6
+# MonRun$State2[MonRun$State == 9] <- 7
+
 MonRun$State2 <- MonRun$State
-MonRun$State2[MonRun$State == 3] <- 1
-MonRun$State2[MonRun$State == 4] <- 2
-MonRun$State2[MonRun$State == 2] <- 2
-MonRun$State2[MonRun$State == 1] <- 3
+MonRun$State2[MonRun$State == 2] <- 1
+MonRun$State2[MonRun$State == 1] <- 2
+MonRun$State2[MonRun$State == 3] <- 3
+MonRun$State2[MonRun$State == 4] <- 3
 MonRun$State2[MonRun$State == 5] <- 4
-MonRun$State2[MonRun$State == 6] <- 4
+MonRun$State2[MonRun$State == 11] <- 4
+MonRun$State2[MonRun$State == 6] <- 5
 MonRun$State2[MonRun$State == 7] <- 5
-MonRun$State2[MonRun$State == 8] <- 6
+MonRun$State2[MonRun$State == 8] <- 5
+MonRun$State2[MonRun$State == 10] <- 6
 MonRun$State2[MonRun$State == 9] <- 7
-MonRun$State2[MonRun$State == 11] <- 7
-MonRun$State2[MonRun$State == 10] <- 8
 
 #male samples
 MonRun$State2 <- MonRun$State
 MonRun$State2[MonRun$State == 1] <- 1
-MonRun$State2[MonRun$State == 7] <- 2
+MonRun$State2[MonRun$State == 11] <- 2
 MonRun$State2[MonRun$State == 2] <- 2
-MonRun$State2[MonRun$State == 6] <- 3
+MonRun$State2[MonRun$State == 10] <- 3
+MonRun$State2[MonRun$State == 3] <- 3
 MonRun$State2[MonRun$State == 4] <- 4
-MonRun$State2[MonRun$State == 5] <- 4
-MonRun$State2[MonRun$State == 3] <- 5
+MonRun$State2[MonRun$State == 5] <- 5
+MonRun$State2[MonRun$State == 6] <- 5
+MonRun$State2[MonRun$State == 7] <- 5
+MonRun$State2[MonRun$State == 8] <- 6
+MonRun$State2[MonRun$State == 9] <- 7
 
 
 
@@ -232,16 +253,16 @@ g
 
 
 ###### FIGURES #########
-#tiff(file='~/prot-lineage/figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_tree_state.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "State2",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="State")
 g
 dev.off()
 
-#tiff(file='~/prot-lineage/figures/FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_tree_diagnosis.tiff',height=85,width=100,units='mm',res=300)
 g<- plot_cell_trajectory(MonRun,color_by = "diagnosis",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
 g <- g + ggplot2::scale_color_viridis_d()
 g <- g + ggplot2::labs(color="Diagnosis")
@@ -249,43 +270,11 @@ g
 dev.off()
 
 #tiff(file='~/prot-lineage/figures/FEMALE_tree_braak.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_braak.tiff',height=85,width=100,units='mm',res=300)
-g<- plot_cell_trajectory(MonRun,color_by = "braaksc",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-g <- g + ggplot2::scale_color_viridis_d()
-g <- g + ggplot2::labs(color="Braak Score")
-g
-dev.off()
-
-#MonRun$APOE <- factor(MonRun$APOE,levels=c(0,1,2))
-MonRun$apoe_genotype<- as.character(MonRun$apoe_genotype)
-#tiff(file='~/prot-lineage/figures/FEMALE_tree_apoe.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_apoe.tiff',height=85,width=100,units='mm',res=300)
-g<- plot_cell_trajectory(MonRun,color_by = "apoe_genotype",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-g <- g + ggplot2::scale_color_viridis_d()
-g <- g + ggplot2::labs(color="APOE genotype")
-g
-dev.off()
 
 
-#tiff(file='~/prot-lineage/figures/FEMALE_tree_cerad.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_cerad.tiff',height=85,width=100,units='mm',res=300)
-g<- plot_cell_trajectory(MonRun,color_by = "ceradsc_RADCnonStd",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-g <- g + ggplot2::scale_color_viridis_d()
-g <- g + ggplot2::labs(color="CERAD Score")
-g
-dev.off()
 
-#tiff(file='~/prot-lineage/figures/FEMALE_tree_cogdx.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_tree_cogdx.tiff',height=85,width=100,units='mm',res=300)
-g<- plot_cell_trajectory(MonRun,color_by = "cogdx",show_branch_points=F,use_color_gradient = F,cell_size = 0.5)
-g <- g + ggplot2::scale_color_viridis_d()
-g <- g + ggplot2::labs(color="Cognitive Diagnosis")
-g
-dev.off()
-
-
-#tiff(file='~/prot-lineage/figures/FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_bargraph_braak.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=braaksc, y=scale(Pseudotime,center=F),fill=braaksc)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -297,8 +286,8 @@ g
 dev.off()
 
 MonRun$ceradsc_RADCnonStd <- fct_rev(MonRun$ceradsc_RADCnonStd)
-#tiff(file='~/prot-lineage/figures/FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_bargraph_cerad.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=ceradsc_RADCnonStd, y=scale(Pseudotime,center=F),fill=ceradsc_RADCnonStd)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -310,8 +299,8 @@ g
 dev.off()
 
 
-#tiff(file='~/prot-lineage/figures/FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_bargraph_cogdx.tiff',height=85,width=100,units='mm',res=300)
 g <- ggplot2::ggplot(MonRun@phenoData@data, aes(x=cogdx, y=scale(Pseudotime,center=F),fill=cogdx)) 
 g <- g + ggplot2::geom_boxplot()
 g <- g + ggplot2::stat_summary(fun.y=mean, geom="point", shape=23, size=2)
@@ -332,7 +321,7 @@ x <- list()
 x$msex <- MonRun$msex
 x$SampleID <- MonRun$batch.channel
 x$projid <- MonRun$projid.ROSMAP
-x$State2 <- MonRun$State2
+x$State <- MonRun$State2
 x$Pseudotime <- MonRun$Pseudotime
 x$diagnosis <- MonRun$diagnosis
 x$braaksc <- MonRun$braaksc
@@ -366,8 +355,8 @@ casecontrolF$diag2 <- ifelse(casecontrolF$diagnosis=='AD', 1, 0)
 
 summary(glm(diag2 ~ pseudotime_sc,casecontrolF,family='binomial'))
 
-#tiff(file='~/prot-lineage/figures/FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
-tiff(file='~/prot-lineage/figures/MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/FEMALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/MALE_bargraph_diagnosis.tiff',height=170,width=200,units='mm',res=300)
 
 g <- ggplot(casecontrolF,aes(x=diagnosis,
                         y=pseudotime_sc,

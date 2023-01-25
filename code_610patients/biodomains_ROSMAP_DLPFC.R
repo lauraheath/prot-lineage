@@ -36,9 +36,7 @@ bd.tally <- function( enrVct, biodomDefTbl){
 
 # data: biodomain definitions, biodomain plotting colors, and braak state-gene table
 biodom <- readRDS( synapser::synGet('syn25428992')$path  )
-
-
-biodom.annotated <- biodom %>% filter(!is.na(n_symbol)) %>% pull(symbol, name=GOterm_Name)
+biodom.annotated <- biodom %>% filter(!is.na(n_hgncSymbol)) %>% pull(hgnc_symbol, name=GOterm_Name)
 dom.cols <- read_csv( synGet('syn26856828')$path )
 
 #female degs by state
@@ -64,7 +62,7 @@ enr <- map_dfr(
            # , !(gene_names %in% (dlpfc.pt %>% filter(pvalue <= 0.05) %>% pull(gene_names))) # use this to consider genes unique to the neuropath
     ) %>% #
     arrange(desc(effect)) %>% 
-    pull(effect, name = gene_names) %>%
+    pull(effect, name = gene_short_name) %>%
     fgseaMultilevel(biodom.annotated, ., eps = 0, scoreType = 'std') %>% 
     mutate(state = .x)
 )
@@ -86,8 +84,8 @@ enr <- enr %>%
 
 # plot! -------------------------------------------------------------------
 
-#tiff(file='~/prot-lineage/rnaseq_figures/FEMALE_bidomains.tiff',height=200,width=200,units='mm',res=300)
-#tiff(file='~/prot-lineage/rnaseq_figures/MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
+#tiff(file='~/prot-lineage/figures/FEMALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
+tiff(file='~/prot-lineage/figures/MALE_biodomains.tiff',height=200,width=200,units='mm',res=300)
 
 enr %>%   
   ggplot(aes( factor(state), NES ))+ 
@@ -117,8 +115,8 @@ enr %>%
   geom_hline(yintercept = 0, lty = 3)+
   facet_wrap(~Biodomain)+
   labs(x='')+  coord_flip() + theme(legend.position = 'right') +
-  #ggtitle('Female transcriptomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
-  ggtitle('Male transcriptomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
+  #ggtitle('Female proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
+  ggtitle('Male proteomics, biodomains in each state vs State1; state pval < 0.01; term pval < 0.01')
 dev.off()
 
 
@@ -126,19 +124,19 @@ dev.off()
 enr$leadingEdge <- as.character(enr$leadingEdge)
 
 write.csv(enr, file="~/prot-lineage/data_objects/F_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/F_GOenrichment.csv', parentId='syn38349639')
+file <- synapser::File(path='~/prot-lineage/data_objects/F_GOenrichment.csv', parentId='syn25607662')
 file <- synapser::synStore(file)
 
-file <- synapser::File(path='~/prot-lineage/rnaseq_figures/FEMALE_bidomains.tiff', parentId='syn38347670')
+file <- synapser::File(path='~/prot-lineage/figures/FEMALE_biodomains.tiff', parentId='syn39935585')
 file <- synapser::synStore(file)
 
 
 
 write.csv(enr, file="~/prot-lineage/data_objects/M_GOenrichment.csv", row.names=FALSE)
-file <- synapser::File(path='~/prot-lineage/data_objects/M_GOenrichment.csv', parentId='syn38349639')
+file <- synapser::File(path='~/prot-lineage/data_objects/M_GOenrichment.csv', parentId='syn25607662')
 file <- synapser::synStore(file)
 
-file <- synapser::File(path='~/prot-lineage/rnaseq_figures/MALE_biodomains.tiff', parentId='syn38347670')
+file <- synapser::File(path='~/prot-lineage/figures/MALE_biodomains.tiff', parentId='syn39935585')
 file <- synapser::synStore(file)
 
 
